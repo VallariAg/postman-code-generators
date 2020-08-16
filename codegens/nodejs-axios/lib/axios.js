@@ -12,7 +12,7 @@ const _ = require('./lodash'),
  * @param {Object} options
  * @returns {String} - nodejs(axios) code snippet for given request object
  */
-function makeSnippet (request, indentString, options) {
+function makeSnippet(request, indentString, options) {
 
   var snippet = options.ES6_enabled ? 'const' : 'var',
     configArray = [],
@@ -132,23 +132,26 @@ function makeSnippet (request, indentString, options) {
   snippet += ' config = {\n';
   snippet += configArray.join(',\n') + '\n';
   snippet += '};\n\n';
-  snippet += 'axios(config)\n';
   if (options.ES6_enabled) {
-    snippet += '.then((response) => {\n';
+    snippet += 'async function makeCall(config) {\n';
+    snippet += indentString + 'try {\n';
+    snippet += indentString + indentString + 'const response = await axios(config);\n';
+    snippet += indentString + indentString + 'console.log(JSON.stringify(response.data));\n';
+    snippet += indentString + '} catch (error) {\n';
+    snippet += indentString + indentString + 'console.log(error) {\n';
+    snippet += indentString + '}\n';
+    snippet += '}\n'
+    snippet += 'makeCall(config);'
   }
   else {
+    snippet += 'axios(config)\n';
     snippet += '.then(function (response) {\n';
-  }
-  snippet += indentString + 'console.log(JSON.stringify(response.data));\n';
-  snippet += '})\n';
-  if (options.ES6_enabled) {
-    snippet += '.catch((error) => {\n';
-  }
-  else {
+    snippet += indentString + 'console.log(JSON.stringify(response.data));\n';
+    snippet += '})\n';
     snippet += '.catch(function (error) {\n';
+    snippet += indentString + 'console.log(error);\n';
+    snippet += '});\n';
   }
-  snippet += indentString + 'console.log(error);\n';
-  snippet += '});\n';
 
   return snippet;
 }
@@ -158,7 +161,7 @@ function makeSnippet (request, indentString, options) {
  *
  * @returns {Array} - Returns an array of option objects
  */
-function getOptions () {
+function getOptions() {
   return [
     {
       name: 'Set indentation count',
@@ -181,7 +184,7 @@ function getOptions () {
       type: 'positiveInteger',
       default: 0,
       description: 'Set number of milliseconds the request should wait for a response' +
-    ' before timing out (use 0 for infinity)'
+        ' before timing out (use 0 for infinity)'
     },
     {
       name: 'Follow redirects',
@@ -220,7 +223,7 @@ function getOptions () {
  * @param {Number} options.requestTimeout : time in milli-seconds after which request will bail out
  * @param {Function} callback - callback function with parameters (error, snippet)
  */
-function convert (request, options, callback) {
+function convert(request, options, callback) {
   if (!_.isFunction(callback)) {
     throw new Error('NodeJS-Axios-Converter: callback is not valid function');
   }
